@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}All Books{% endblock %}
+
+{% block content %}
+<section class="hero-bg text-white py-12 lg:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <p class="text-amber font-medium text-sm uppercase tracking-[0.15em] mb-2">Library</p>
+        <h1 class="font-display text-3xl sm:text-4xl font-bold">All Books</h1>
+        <p class="text-white/50 mt-2">Explore our collection of {{ total_books if total_books is defined else books|length }} books</p>
+    </div>
+</section>
+
+<section class="py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Filters Bar -->
+        <div class="bg-white rounded-2xl shadow-sm border border-amber/5 p-4 mb-8">
+            <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+                <!-- Search -->
+                <form action="{{ url_for('books') }}" method="get" class="relative flex-1 w-full lg:max-w-sm">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink/30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" name="q" placeholder="Search by title or author..." value="{{ search_query or '' }}"
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-parchment border border-amber/10 text-sm focus:outline-none input-glow">
+                </form>
+
+                <!-- Genre Filter -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-semibold text-ink/40 uppercase tracking-wider mr-1">Genre:</span>
+                    <a href="{{ url_for('books', q=search_query, sort=sort_by) }}" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {% if not current_genre %}bg-amber text-white shadow-md{% else %}bg-amber/5 text-ink/50 hover:bg-amber/10{% endif %}">
+                        All
+                    </a>
+                    {% for genre in genres %}
+                    <a href="{{ url_for('books', genre=genre, q=search_query, sort=sort_by) }}" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {% if current_genre == genre %}bg-amber text-white shadow-md{% else %}bg-amber/5 text-ink/50 hover:bg-amber/10{% endif %}">
+                        {{ genre }}
+                    </a>
+                    {% endfor %}
+                </div>
+
+                <!-- Sort -->
+                <div class="flex items-center gap-2 lg:ml-auto">
+                    <span class="text-xs font-semibold text-ink/40 uppercase tracking-wider">Sort:</span>
+                    <select onchange="window.location.href=this.value" class="text-sm bg-parchment border border-amber/10 rounded-lg px-3 py-2 focus:outline-none input-glow cursor-pointer">
+                        <option value="{{ url_for('books', q=search_query, genre=current_genre, sort='title') }}" {% if sort_by == 'title' %}selected{% endif %}>Title A-Z</option>
+                        <option value="{{ url_for('books', q=search_query, genre=current_genre, sort='author') }}" {% if sort_by == 'author' %}selected{% endif %}>Author A-Z</option>
+                        <option value="{{ url_for('books', q=search_query, genre=current_genre, sort='rating') }}" {% if sort_by == 'rating' %}selected{% endif %}>Top Rated</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Books Grid -->
+        {% if books %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-6">
+            {% for book in books %}
+            <a href="{{ url_for('book_detail', book_id=book.id) }}" class="group">
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm card-hover border border-amber/5">
+                    <div class="aspect-[3/4] overflow-hidden cover-shimmer relative">
+                        <img src="{{ book.cover_image }}" alt="{{ book.title }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                             onerror="this.src='https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop'">
+                        <div class="absolute top-2 right-2 bg-ink/60 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1">
+                            <svg class="w-3 h-3 text-amber" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            {{ book.average_rating() }}
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-display text-sm font-bold text-ink group-hover:text-amber-dark transition-colors line-clamp-1">{{ book.title }}</h3>
+                        <p class="text-xs text-ink/40 mt-1 line-clamp-1">{{ book.author }}</p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="flex items-center justify-center gap-2 mt-10">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('books', page=pagination.prev_num, q=search_query, genre=current_genre, sort=sort_by) }}" class="px-4 py-2 bg-white border border-amber/10 rounded-lg text-sm font-medium text-ink/60 hover:border-amber/30 hover:text-ink transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </a>
+            {% endif %}
+
+            {% for page_num in pagination.iter_pages() %}
+                {% if page_num %}
+                    <a href="{{ url_for('books', page=page_num, q=search_query, genre=current_genre, sort=sort_by) }}" class="w-10 h-10 flex items-center justify-center rounded-lg text-sm font-semibold transition-all {% if page_num == pagination.page %}bg-gradient-to-r from-amber to-amber-dark text-white shadow-md{% else %}bg-white border border-amber/10 text-ink/60 hover:border-amber/30{% endif %}">
+                        {{ page_num }}
+                    </a>
+                {% else %}
+                    <span class="text-ink/30 px-1">...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('books', page=pagination.next_num, q=search_query, genre=current_genre, sort=sort_by) }}" class="px-4 py-2 bg-white border border-amber/10 rounded-lg text-sm font-medium text-ink/60 hover:border-amber/30 hover:text-ink transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-20">
+            <div class="w-20 h-20 bg-amber/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-amber/40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+            <h3 class="font-display text-xl font-bold text-ink mb-2">No Books Found</h3>
+            <p class="text-ink/50">Try adjusting your search or filter criteria.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}
