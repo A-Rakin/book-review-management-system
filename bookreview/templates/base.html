@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BookReview{% endblock %} | BookReview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        parchment: '#FAF6F1',
+                        ink: '#1a1a2e',
+                        forest: '#16213e',
+                        amber: '#e2a04f',
+                        'amber-light': '#f0c987',
+                        'amber-dark': '#c4872e',
+                        sage: '#4a6741',
+                        'sage-light': '#6b8f60',
+                        cream: '#FFF8F0',
+                        wine: '#722F37',
+                        'wine-light': '#944550',
+                    },
+                    fontFamily: {
+                        display: ['"Playfair Display"', 'Georgia', 'serif'],
+                        body: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Source Sans 3', system-ui, sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Playfair Display', Georgia, serif; }
+
+        /* Star rating glow */
+        .star-active { color: #e2a04f; text-shadow: 0 0 8px rgba(226, 160, 79, 0.4); }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #FAF6F1; }
+        ::-webkit-scrollbar-thumb { background: #c4b5a0; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a89880; }
+
+        /* Page transition */
+        .page-fade { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Card hover lift */
+        .card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(26,26,46,0.12); }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #1a1a2e 0%, #e2a04f 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Floating particles background */
+        .hero-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(2px 2px at 20% 30%, rgba(226,160,79,0.3), transparent),
+                radial-gradient(2px 2px at 40% 70%, rgba(226,160,79,0.2), transparent),
+                radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 10% 80%, rgba(226,160,79,0.2), transparent),
+                radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 50% 50%, rgba(226,160,79,0.15), transparent),
+                radial-gradient(2px 2px at 70% 90%, rgba(255,255,255,0.2), transparent);
+            animation: twinkle 4s ease-in-out infinite alternate;
+        }
+        @keyframes twinkle { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Book spine effect */
+        .book-spine {
+            position: relative;
+        }
+        .book-spine::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #e2a04f, #c4872e);
+            border-radius: 2px 0 0 2px;
+        }
+
+        /* Toast animation */
+        .toast-enter { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Input focus glow */
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(226, 160, 79, 0.2);
+        }
+
+        /* Book cover shimmer */
+        .cover-shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        .cover-shimmer::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .cover-shimmer:hover::after {
+            left: 100%;
+        }
+
+        /* Review card */
+        .review-card {
+            border-left: 3px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+        .review-card:hover {
+            border-left-color: #e2a04f;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-parchment text-ink min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-lg border-b border-amber/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <a href="{{ url_for('home') }}" class="flex items-center gap-2 group">
+                    <div class="w-9 h-9 bg-gradient-to-br from-amber to-amber-dark rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
+                    <span class="font-display text-xl font-bold gradient-text hidden sm:block">BookReview</span>
+                </a>
+
+                <!-- Desktop Nav -->
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="{{ url_for('home') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-ink/70 hover:text-ink hover:bg-amber/5 transition-all">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4"/></svg>
+                            Home
+                        </span>
+                    </a>
+                    <a href="{{ url_for('books') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-ink/70 hover:text-ink hover:bg-amber/5 transition-all">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                            Books
+                        </span>
+                    </a>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('profile', username=current_user.username) }}" class="px-4 py-2 rounded-lg text-sm font-medium text-ink/70 hover:text-ink hover:bg-amber/5 transition-all">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            Profile
+                        </span>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-wine/70 hover:text-wine hover:bg-wine/5 transition-all">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            Logout
+                        </span>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-ink/70 hover:text-ink hover:bg-amber/5 transition-all">Sign In</a>
+                    <a href="{{ url_for('register') }}" class="px-5 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-amber to-amber-dark text-white shadow-md hover:shadow-lg hover:from-amber-dark hover:to-amber transition-all">
+                        Get Started
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile menu button -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg hover:bg-amber/5 transition-colors">
+                    <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-amber/10 bg-white/95 backdrop-blur-lg">
+            <div class="px-4 py-3 space-y-1">
+                <a href="{{ url_for('home') }}" class="block px-4 py-2.5 rounded-lg text-sm font-medium text-ink/70 hover:text-ink hover:bg-amber/5">Home</a>
+                <a href="{{ url_for('books') }}" class="block px-4 py-2.5 rounded-lg text-sm font-medium text-ink/70 hover:text-ink hover:bg-amber/5">Books</a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('profile', username=current_user.username) }}" class="block px-4 py-2.5 rounded-lg text-sm font-medium text-ink/70 hover:text-ink hover:bg-amber/5">Profile</a>
+                <a href="{{ url_for('logout') }}" class="block px-4 py-2.5 rounded-lg text-sm font-medium text-wine/70 hover:text-wine hover:bg-wine/5">Logout</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="block px-4 py-2.5 rounded-lg text-sm font-medium text-ink/70 hover:text-ink hover:bg-amber/5">Sign In</a>
+                <a href="{{ url_for('register') }}" class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-amber hover:text-amber-dark">Get Started</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="fixed top-20 right-4 z-50 space-y-2">
+        {% for category, message in messages %}
+        <div class="toast-enter flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm max-w-sm
+            {% if category == 'success' %}bg-sage/10 border border-sage/20 text-sage
+            {% elif category == 'danger' %}bg-wine/10 border border-wine/20 text-wine
+            {% elif category == 'warning' %}bg-amber/10 border border-amber/20 text-amber-dark
+            {% else %}bg-forest/10 border border-forest/20 text-forest{% endif %}">
+            {% if category == 'success' %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            {% elif category == 'danger' %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            {% elif category == 'warning' %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            {% else %}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {% endif %}
+            <span class="text-sm font-medium">{{ message }}</span>
+            <button onclick="this.parentElement.remove()" class="ml-2 opacity-50 hover:opacity-100 transition-opacity">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="flex-1 page-fade">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-ink text-white/60 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-amber to-amber-dark rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        <span class="font-display text-lg font-bold text-white">BookReview</span>
+                    </div>
+                    <p class="text-sm leading-relaxed">Discover, review, and share your love for books. A platform built by readers, for readers.</p>
+                </div>
+                <div>
+                    <h4 class="font-display text-sm font-semibold text-white uppercase tracking-wider mb-4">Explore</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{{ url_for('home') }}" class="hover:text-amber transition-colors">Home</a></li>
+                        <li><a href="{{ url_for('books') }}" class="hover:text-amber transition-colors">All Books</a></li>
+                        <li><a href="{{ url_for('books', sort='rating') }}" class="hover:text-amber transition-colors">Top Rated</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-display text-sm font-semibold text-white uppercase tracking-wider mb-4">Genres</h4>
+                    <ul class="space-y-2 text-sm">
+                        {% for genre in genres[:5] %}
+                        <li><a href="{{ url_for('books', genre=genre) }}" class="hover:text-amber transition-colors">{{ genre }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-xs">&copy; 2024 BookReview. All rights reserved.</p>
+                <p class="text-xs">Built with Flask, Tailwind CSS &amp; ❤️ for books</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Auto-dismiss flash messages after 4 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.toast-enter').forEach(el => {
+                el.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(20px)';
+                setTimeout(() => el.remove(), 300);
+            });
+        }, 4000);
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
